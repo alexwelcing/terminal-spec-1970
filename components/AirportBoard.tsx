@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { ComparisonResult, ChangeType, SpecChange } from '../types';
 import FlapCell from './FlapCell';
 import ChangeDetailModal from './ChangeDetailModal';
@@ -11,7 +11,49 @@ interface AirportBoardProps {
 
 const AirportBoard: React.FC<AirportBoardProps> = ({ data, loading }) => {
   const [selectedChange, setSelectedChange] = useState<SpecChange | null>(null);
-  const rows = loading ? Array(5).fill(null) : (data?.changes || []);
+  const [sortField, setSortField] = useState<'type' | 'impact' | 'endpoint' | null>(null);
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
+
+  const handleSort = (field: 'type' | 'impact' | 'endpoint') => {
+    if (sortField === field) {
+      setSortDirection(prev => prev === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortField(field);
+      // Default sort directions: 
+      // Endpoint -> A-Z (asc)
+      // Severity/Impact -> High-Low (desc)
+      if (field === 'endpoint') setSortDirection('asc');
+      else setSortDirection('desc');
+    }
+  };
+
+  const sortedChanges = useMemo(() => {
+    if (!data?.changes) return [];
+    const changes = [...data.changes];
+    if (!sortField) return changes;
+
+    const impactWeight = { HIGH: 3, MEDIUM: 2, LOW: 1 };
+    const typeWeight = { BREAKING: 4, REMOVED: 3, MODIFIED: 2, ADDED: 1 };
+
+    return changes.sort((a, b) => {
+        let valA: any = a[sortField];
+        let valB: any = b[sortField];
+
+        if (sortField === 'impact') {
+            valA = impactWeight[a.impact as keyof typeof impactWeight] || 0;
+            valB = impactWeight[b.impact as keyof typeof impactWeight] || 0;
+        } else if (sortField === 'type') {
+            valA = typeWeight[a.type as keyof typeof typeWeight] || 0;
+            valB = typeWeight[b.type as keyof typeof typeWeight] || 0;
+        }
+
+        if (valA < valB) return sortDirection === 'asc' ? -1 : 1;
+        if (valA > valB) return sortDirection === 'asc' ? 1 : -1;
+        return 0;
+    });
+  }, [data, sortField, sortDirection]);
+
+  const rows = loading ? Array(5).fill(null) : sortedChanges;
 
   const getStatusColor = (type: ChangeType) => {
     switch (type) {
@@ -21,6 +63,14 @@ const AirportBoard: React.FC<AirportBoardProps> = ({ data, loading }) => {
       default: return 'text-amber-400';
     }
   };
+
+  const getSortButtonClass = (field: string) => `
+    px-3 py-1 text-[10px] font-bold uppercase tracking-widest border transition-all cursor-pointer
+    ${sortField === field 
+      ? 'bg-amber-500 text-black border-amber-500 shadow-[0_0_10px_rgba(251,191,36,0.3)]' 
+      : 'bg-transparent text-gray-500 border-[#2d303a] hover:border-amber-500/50 hover:text-amber-500'
+    }
+  `;
 
   return (
     <>
@@ -34,6 +84,22 @@ const AirportBoard: React.FC<AirportBoardProps> = ({ data, loading }) => {
           <div className="text-amber-500 text-sm font-bold tracking-widest animate-pulse">
             {loading ? 'STATUS: PROCESSING...' : 'STATUS: READY'}
           </div>
+        </div>
+
+        {/* Sorting Controls */}
+        <div className="bg-[#15171e] border-b border-[#2d303a] px-6 py-2 flex justify-end items-center gap-4">
+             <span className="text-[9px] text-gray-600 font-bold tracking-[0.2em] uppercase">Sort Protocol:</span>
+             <div className="flex gap-2">
+                 <button onClick={() => handleSort('type')} className={getSortButtonClass('type')}>
+                    Action {sortField === 'type' && (sortDirection === 'asc' ? '↑' : '↓')}
+                 </button>
+                 <button onClick={() => handleSort('endpoint')} className={getSortButtonClass('endpoint')}>
+                    Endpoint {sortField === 'endpoint' && (sortDirection === 'asc' ? '(A-Z)' : '(Z-A)')}
+                 </button>
+                 <button onClick={() => handleSort('impact')} className={getSortButtonClass('impact')}>
+                    Impact {sortField === 'impact' && (sortDirection === 'asc' ? '↑' : '↓')}
+                 </button>
+             </div>
         </div>
 
         {/* Column Headers */}
