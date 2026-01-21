@@ -152,8 +152,29 @@ const App: React.FC = () => {
         <AirportBoard data={result} loading={loading} />
 
         {/* Footer Credit */}
-        <footer className="text-center text-gray-700 text-[10px] font-bold uppercase tracking-[0.5em] mt-20">
-          International Engineering Standards &copy; 1970-1979
+        <footer className="text-center mt-20 pb-8 space-y-4">
+          <div className="text-gray-700 text-[10px] font-bold uppercase tracking-[0.5em]">
+            International Engineering Standards &copy; 1970-1979
+          </div>
+          <div className="flex justify-center items-center gap-6 text-[9px] font-bold uppercase tracking-widest text-gray-600">
+            <a 
+              href="https://alexwelcing.com" 
+              target="_blank" 
+              rel="noopener noreferrer" 
+              className="hover:text-amber-500 transition-colors border-b border-transparent hover:border-amber-500/50 pb-0.5"
+            >
+              Created by Alex Welcing
+            </a>
+            <span className="text-gray-800">|</span>
+            <a 
+              href="https://github.com/alexwelcing/terminal-spec-1970" 
+              target="_blank" 
+              rel="noopener noreferrer" 
+              className="hover:text-amber-500 transition-colors border-b border-transparent hover:border-amber-500/50 pb-0.5"
+            >
+              Source Code
+            </a>
+          </div>
         </footer>
       </main>
     </div>
