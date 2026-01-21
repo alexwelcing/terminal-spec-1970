@@ -1,0 +1,5 @@
+{
+  "name": "Terminal Spec 1970",
+  "description": "A retro-styled OpenAPI YAML comparison tool that visualizes spec changes like a classic 1970s airport split-flap departure board.",
+  "requestFramePermissions": []
+}
